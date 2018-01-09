@@ -24,7 +24,7 @@ namespace BaseLibs.Types
             var call = Expression.Call(callInstParam, m);
             var body = (type == typeof(object)) ? (Expression)call : Expression.Convert(call, typeof(object));
             var expr = Expression.Lambda(typeof(MemberGetter), body, instParam);
-            return (MemberGetter)expr.CompileFast();
+            return (MemberGetter)expr.Compile();
         }
 
         public static MemberSetter DelegateForSetProperty(this PropertyInfo p)
@@ -42,7 +42,7 @@ namespace BaseLibs.Types
             var body = Expression.Call(callInstParam, m, argExpr);
 
             var expr = Expression.Lambda(typeof(MemberSetter), body, instParam, valueParam);
-            return (MemberSetter)expr.CompileFast();
+            return (MemberSetter)expr.Compile();
         }
     }
 }
