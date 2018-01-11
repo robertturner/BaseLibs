@@ -13,15 +13,15 @@ namespace BaseLibs.Tasks
     {
         static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache> genTaskDelCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache>();
 
-        private TaskGeneric() { }
-
-        public static TaskGeneric TryCreateFromTask(Task task)
+        public TaskGeneric(Task task)
         {
+            if (task == null)
+                throw new ArgumentNullException(nameof(task));
             var genTask = task.GetType();
-            for (; ; )
+            for (;;)
             {
                 if (genTask == typeof(Task))
-                    return null;
+                    throw new ArgumentException("task does not have Result");
                 if (genTask.IsGenericType)
                 {
                     var t = genTask.GetGenericTypeDefinition();
@@ -30,13 +30,9 @@ namespace BaseLibs.Tasks
                 }
                 genTask = genTask.BaseType;
             }
-            var resType = genTask.GetGenericArguments()[0];
-            return new TaskGeneric
-            {
-                Instance = task,
-                ResultType = resType,
-                cache = genTaskDelCache.GetOrSet(resType, () => new TaskGenDelCache(genTask))
-            };
+            Instance = task;
+            ResultType = genTask.GetGenericArguments()[0];
+            cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
         }
 
         public Task Instance { get; private set; }
@@ -48,20 +44,14 @@ namespace BaseLibs.Tasks
 
         class TaskGenDelCache
         {
-            public TaskGenDelCache(Type genTaskType) { GenTaskType = genTaskType; }
+            public TaskGenDelCache(Type genTaskType)
+            {
+                GenTaskType = genTaskType;
+                ResultCaller = GenTaskType.GetProperty("Result").DelegateForGetProperty();
+            }
             public Type GenTaskType { get; private set; }
 
-            private MethodInvoker getResCaller;
-
-            public MethodInvoker ResultCaller
-            {
-                get
-                {
-                    if (getResCaller == null)
-                        getResCaller = GenTaskType.GetProperty("Result").GetMethod.DelegateForMethod();
-                    return getResCaller;
-                }
-            }
+            public MemberGetter ResultCaller { get; private set; }
         }
 
         string ResultAsString

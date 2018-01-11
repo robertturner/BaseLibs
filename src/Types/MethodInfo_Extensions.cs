@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using BaseLibs.Expressions;
 
 namespace BaseLibs.Types
 {
@@ -45,7 +44,7 @@ namespace BaseLibs.Types
                 call = checkedCall;
 
             var expr = Expression.Lambda(typeof(MethodInvoker), call, instParam, argsParam);
-            return (MethodInvoker)expr.CompileFast();
+            return (MethodInvoker)expr.Compile();
         }
 
         public static T CreateCustomDelegate<T>(this MethodInfo m) where T : class
@@ -87,7 +86,7 @@ namespace BaseLibs.Types
                     call = Expression.Convert(call, typeof(object));
             }
             var expr = Expression.Lambda(delType, call, argsParams);
-            return expr.CompileFast() as T;
+            return expr.Compile() as T;
         }
         #endregion
 

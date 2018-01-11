@@ -10,9 +10,7 @@ namespace BaseLibs.Tasks
     {
         public static TaskGeneric TryGetAsGenericTask(this Task task)
         {
-            if (task == null)
-                throw new ArgumentNullException(nameof(task));
-            return TaskGeneric.TryCreateFromTask(task);
+            return new TaskGeneric(task);
         }
     }
 }
