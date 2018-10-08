@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace BaseLibs.Tasks
 {
-    [System.Diagnostics.DebuggerDisplay("Status = {Status}, Result = {ResultAsString}")]
+    [System.Diagnostics.DebuggerDisplay("Status = {Instance.Status}, Result = {ResultAsString}")]
     public sealed class TaskGeneric
     {
         static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache> genTaskDelCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache>();
@@ -35,12 +35,12 @@ namespace BaseLibs.Tasks
             cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
         }
 
-        public Task Instance { get; private set; }
+        public Task Instance { get; }
 
-        TaskGenDelCache cache;
+        readonly TaskGenDelCache cache;
 
-        public Type GenTaskType { get { return cache.GenTaskType; } }
-        public Type ResultType { get; private set; }
+        public Type GenTaskType => cache.GenTaskType;
+        public Type ResultType { get; }
 
         class TaskGenDelCache
         {
@@ -49,22 +49,14 @@ namespace BaseLibs.Tasks
                 GenTaskType = genTaskType;
                 ResultCaller = GenTaskType.GetProperty("Result").DelegateForGetProperty();
             }
-            public Type GenTaskType { get; private set; }
+            public Type GenTaskType { get; }
 
-            public MemberGetter ResultCaller { get; private set; }
+            public MemberGetter ResultCaller { get; }
         }
 
-        string ResultAsString
-        {
-            get
-            {
-                if ((Instance.Status & (TaskStatus.RanToCompletion)) != 0)
-                    return Result.ToString();
-                return "<value not available>";
-            }
-        }
+        string ResultAsString => (Instance.Status == TaskStatus.RanToCompletion) ? Result.ToString() : "<value not available>";
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        public object Result { get { return cache.ResultCaller(Instance); } }
+        public object Result => cache.ResultCaller(Instance);
     }
 }

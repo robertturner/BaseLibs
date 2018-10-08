@@ -12,11 +12,11 @@ namespace BaseLibs.Tasks
     {
         static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, TaskDelegateCacheContainer> tdcCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, TaskDelegateCacheContainer>();
 
-        private TaskDelegateCacheContainer cont;
+        private readonly TaskDelegateCacheContainer cont;
         public Type Type => cont.Type;
         public Type TCSType => cont.TCSType;
 
-        public object Instance { get; private set; }
+        public object Instance { get; }
 
         public TaskCompletionSourceGeneric(Type type)
         {
@@ -35,29 +35,26 @@ namespace BaseLibs.Tasks
             cont.SetExceptionCaller(Instance, exception);
         }
 
-        public Task Task { get { return (Task)cont.GetTaskCaller(Instance); } }
+        public Task Task => (Task)cont.GetTaskCaller(Instance);
 
         private class TaskDelegateCacheContainer
         {
-            public Type TCSType { get; private set; }
-            public Type Type { get; private set; }
+            public Type TCSType { get; }
+            public Type Type { get; }
 
-            public Action<object, object> SetResCaller { get; private set; }
-            public MemberGetter GetTaskCaller { get; private set; }
-            public Action<object, Exception> SetExceptionCaller { get; private set; }
+            public Action<object, object> SetResCaller { get; }
+            public MemberGetter GetTaskCaller { get; }
+            public Action<object, Exception> SetExceptionCaller { get; }
 
-            public object CreateTcs()
-            {
-                return Activator.CreateInstance(TCSType);
-            }
+            public object CreateTcs() => Activator.CreateInstance(TCSType);
 
             public TaskDelegateCacheContainer(Type type)
             {
                 Type = type;
                 TCSType = typeof(TaskCompletionSource<>).MakeGenericType(type);
-                SetResCaller = TCSType.GetMethod("SetResult", new Type[] { type }).CreateCustomDelegate<Action<object, object>>();
+                SetResCaller = TCSType.GetMethod("SetResult", new[] { type }).CreateCustomDelegate<Action<object, object>>();
                 GetTaskCaller = TCSType.GetProperty("Task").DelegateForGetProperty();
-                SetExceptionCaller = TCSType.GetMethod("SetException", new Type[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>();
+                SetExceptionCaller = TCSType.GetMethod("SetException", new[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>();
             }
         }
     }
