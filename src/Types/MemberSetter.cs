@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace BaseLibs.Types
 {
-    public delegate void MemberSetter(object instance, object value);
+    public delegate object MemberSetter(object instance, object value);
 }
