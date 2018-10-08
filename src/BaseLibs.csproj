@@ -13,9 +13,9 @@
     <PackageReleaseNotes>Added FieldInfo getter &amp; setter delegate generators</PackageReleaseNotes>
     <Copyright>Copyright 2018</Copyright>
     <PackageTags>Utils</PackageTags>
-    <Version>0.1.11</Version>
+    <Version>0.1.12</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>0.1.11.0</AssemblyVersion>
+    <AssemblyVersion>0.1.12.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

@@ -34,9 +34,29 @@ namespace BaseLibs.Collections
                 action(element, index++);
         }
 
-        public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> source)
+        public static async Task ForEach<T>(this IEnumerable<T> source, Func<T, Task> action)
         {
-            return Task.WhenAll(source);
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            foreach (T element in source)
+                await action(element);
         }
+
+        public static async Task ForEach<T>(this IEnumerable<T> source, Func<T, int, Task> action)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+            if (action == null)
+                throw new ArgumentNullException(nameof(action));
+            int index = 0;
+            foreach (T element in source)
+                await action(element, index++);
+        }
+
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source) => new HashSet<T>(source);
+
+        public static bool NullOrEmpty<T>(this IEnumerable<T> source) => source == null || !source.Any();
     }
 }

@@ -12,5 +12,7 @@ namespace BaseLibs.Tasks
         {
             return new TaskGeneric(task);
         }
+
+        public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> source) => Task.WhenAll(source);
     }
 }
