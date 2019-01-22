@@ -15,20 +15,16 @@ namespace BaseLibs.Collections
 
         public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+            source.ThrowIfNull(nameof(source));
+            action.ThrowIfNull(nameof(action));
             foreach (T element in source)
                 action(element);
         }
 
         public static void ForEach<T>(this IEnumerable<T> source, Action<T, int> action)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+            source.ThrowIfNull(nameof(source));
+            action.ThrowIfNull(nameof(action));
             int index = 0;
             foreach (T element in source)
                 action(element, index++);
@@ -36,20 +32,16 @@ namespace BaseLibs.Collections
 
         public static async Task ForEach<T>(this IEnumerable<T> source, Func<T, Task> action)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+            source.ThrowIfNull(nameof(source));
+            action.ThrowIfNull(nameof(action));
             foreach (T element in source)
                 await action(element);
         }
 
         public static async Task ForEach<T>(this IEnumerable<T> source, Func<T, int, Task> action)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            if (action == null)
-                throw new ArgumentNullException(nameof(action));
+            source.ThrowIfNull(nameof(source));
+            action.ThrowIfNull(nameof(action));
             int index = 0;
             foreach (T element in source)
                 await action(element, index++);

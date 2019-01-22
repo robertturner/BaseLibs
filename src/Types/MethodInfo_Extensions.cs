@@ -31,9 +31,10 @@ namespace BaseLibs.Types
             Expression call = m.IsStatic ? Expression.Call(m, indexedParams) :
                 Expression.Call((parentType == typeof(object)) ? (Expression)instParam : Expression.Convert(instParam, parentType), m, indexedParams);
 
-            Expression<Func<object[], Exception>> newExcep = a => new ArgumentException($"Number of supplied arguments ({a.Length}) does not match number of method arguments ({args.Length})");
+            Expression<Action<object[]>> callArgEx = a => ExThrowers.ThrowArgEx($"Number of supplied arguments ({a.Length}) does not match number of method arguments ({args.Length})");
             var checkerExpr = Expression.IfThen(Expression.NotEqual(Expression.ArrayLength(argsParam), Expression.Constant(args.Length)),
-                Expression.Throw(Expression.Invoke(newExcep, argsParam)));
+                Expression.Invoke(callArgEx, argsParam));
+            
             var checkedCall = Expression.Block(checkerExpr, call);
 
             if (retType == typeof(void))
@@ -51,14 +52,14 @@ namespace BaseLibs.Types
         {
             var delType = typeof(T);
             if (!typeof(Delegate).IsAssignableFrom(delType))
-                throw new ArgumentException("T is not Delegate type");
+                ExThrowers.ThrowArgEx("T is not Delegate type");
             var delInvokeM = delType.GetMethod("Invoke");
             var delParams = delInvokeM.GetParameters();
             var parentType = m.DeclaringType;
             var retType = m.ReturnType;
             var args = m.GetParameters().Select(p => p.ParameterType).ToArray();
             if (delParams.Length != (args.Length + (m.IsStatic ? 0 : 1)))
-                throw new ArgumentException("Number of Delegate arguments does not match method");
+                ExThrowers.ThrowArgEx("Number of Delegate arguments does not match method");
 
             var argsParams = delParams.Select(p => Expression.Parameter(p.ParameterType, p.Name)).ToArray();
 

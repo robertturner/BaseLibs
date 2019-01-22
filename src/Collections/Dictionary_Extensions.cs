@@ -8,8 +8,7 @@ namespace BaseLibs.Collections
     {
         public static TValue GetValueOrDefault<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> dictionary, TKey key, TValue defaultValue = default)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
+            dictionary.ThrowIfNull(nameof(dictionary));
             if (dictionary is IReadOnlyDictionary<TKey, TValue> rdict)
                 return rdict.TryGetValue(key, out TValue value) ? value : defaultValue;
             if (dictionary is IDictionary<TKey, TValue> idict)
@@ -33,8 +32,7 @@ namespace BaseLibs.Collections
 
         public static void UpdateOrRemove<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, bool update, TValue value)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
+            dictionary.ThrowIfNull(nameof(dictionary));
             if (update)
                 dictionary[key] = value;
             else
@@ -43,10 +41,8 @@ namespace BaseLibs.Collections
 
         public static TValue GetOrSet<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueGetter, bool setIfNull = true)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
-            if (valueGetter == null)
-                throw new ArgumentNullException(nameof(valueGetter));
+            dictionary.ThrowIfNull(nameof(dictionary));
+            valueGetter.ThrowIfNull(nameof(valueGetter));
             if (dictionary.TryGetValue(key, out TValue value))
                 return value;
             value = valueGetter();
@@ -56,10 +52,8 @@ namespace BaseLibs.Collections
         }
         public static TValue GetOrSet<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueGetter, bool setIfNull = true)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
-            if (valueGetter == null)
-                throw new ArgumentNullException(nameof(valueGetter));
+            dictionary.ThrowIfNull(nameof(dictionary));
+            valueGetter.ThrowIfNull(nameof(valueGetter));
             if (dictionary.TryGetValue(key, out TValue value))
                 return value;
             value = valueGetter(key);
@@ -70,10 +64,8 @@ namespace BaseLibs.Collections
 
         public static TValue GetOrThrow<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> dictionary, TKey key, Func<Exception> exceptionCreator)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
-            if (exceptionCreator == null)
-                throw new ArgumentNullException(nameof(exceptionCreator));
+            dictionary.ThrowIfNull(nameof(dictionary));
+            exceptionCreator.ThrowIfNull(nameof(exceptionCreator));
             if (dictionary is IReadOnlyDictionary<TKey, TValue> rdict && rdict.TryGetValue(key, out TValue rdvalue))
                 return rdvalue;
             if (dictionary is IDictionary<TKey, TValue> idict && idict.TryGetValue(key, out TValue idvalue))
@@ -86,8 +78,7 @@ namespace BaseLibs.Collections
 
         public static bool AddIfNoKey<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valProvider)
         {
-            if (dictionary == null)
-                throw new ArgumentNullException(nameof(dictionary));
+            dictionary.ThrowIfNull(nameof(dictionary));
             if (!dictionary.ContainsKey(key))
                 dictionary[key] = valProvider();
             else

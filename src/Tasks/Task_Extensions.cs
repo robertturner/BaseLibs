@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BaseLibs.Tasks
@@ -14,5 +15,25 @@ namespace BaseLibs.Tasks
         }
 
         public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> source) => Task.WhenAll(source);
+
+        public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
+        {
+            if (timeout == TimeSpan.MaxValue)
+                return await task;
+            if (timeout == TimeSpan.Zero)
+            {
+                ExThrowers.ThrowTimeoutEx();
+                return await task; // will never get here
+            }
+            using (var timeoutCancellationTokenSource = new CancellationTokenSource())
+            {
+                if (task == await Task.WhenAny(task, Task.Delay(timeout, timeoutCancellationTokenSource.Token)))
+                    timeoutCancellationTokenSource.Cancel();
+                else
+                    ExThrowers.ThrowTimeoutEx();
+                return await task;
+            }
+        }
+        
     }
 }

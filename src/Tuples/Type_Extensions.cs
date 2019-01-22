@@ -18,10 +18,9 @@ namespace BaseLibs.Tuples
 
         public static ConstructorInvoker AsValueTupleCreator(this Type[] types)
         {
-            if (types == null)
-                throw new ArgumentNullException(nameof(types));
+            types.ThrowIfNull(nameof(types));
             if (types.Length >= creatorsConstructorCache.Length)
-                throw new ArgumentException($"Unable to create ValueTuple type with more than {creatorsConstructorCache.Length} args");
+                ExThrowers.ThrowArgEx($"Unable to create ValueTuple type with more than {creatorsConstructorCache.Length} args");
 
             lock (creatorsLock)
             {
@@ -45,12 +44,11 @@ namespace BaseLibs.Tuples
         };
         public static Type AsValueTupleType(this Type[] types)
         {
-            if (types == null)
-                throw new ArgumentNullException(nameof(types));
+            types.ThrowIfNull(nameof(types));
             if (types.Length < 1)
-                throw new ArgumentException("Unable to create ValueTuple with less than one type");
+                ExThrowers.ThrowArgEx("Unable to create ValueTuple with less than one type");
             if (types.Length > creatorsConstructorCache.Length)
-                throw new ArgumentException($"Unable to create ValueTuple type with more than {valueTupleTypes.Length} args");
+                ExThrowers.ThrowArgEx($"Unable to create ValueTuple type with more than {valueTupleTypes.Length} args");
             return valueTupleTypes[types.Length - 1].MakeGenericType(types);
         }
 
@@ -64,7 +62,7 @@ namespace BaseLibs.Tuples
                 return getters.GetOrSet(type, () =>
                 {
                     if (!type.IsGenericType || !type.Name.StartsWith("ValueTuple`"))
-                        throw new ArgumentException($"{nameof(type)} is not ValueTuple type");
+                        ExThrowers.ThrowArgEx($"{nameof(type)} is not ValueTuple type");
                     var fields = type.GetFields();
 
                     var instParam = Expression.Parameter(typeof(object), "instance");

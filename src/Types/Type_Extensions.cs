@@ -31,5 +31,19 @@ namespace BaseLibs.Types
             return expr.Compile();
         }
 
+        public static Func<object> GetParameterlessConstructor(this Type type)
+        {
+            if (type == null)
+                ExThrowers.ThrowArgNull(nameof(type));
+
+            Expression call = Expression.New(type);
+            if (type.IsValueType)
+                call = Expression.Convert(call, typeof(object));
+
+            var expr = Expression.Lambda(typeof(Func<object>), call);
+            return (Func<object>)expr.Compile();
+        }
+        
+
     }
 }

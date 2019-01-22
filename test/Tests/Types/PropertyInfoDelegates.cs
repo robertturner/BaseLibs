@@ -30,11 +30,14 @@ namespace BaseLibs.Test.Types
             public StructVal AStructVal { get; set; }
         }
 
+
         [Fact]
         public void SetProperty_ClassInstance_ClassProperty()
         {
             var pi = typeof(AClass).GetProperty(nameof(AClass.AClassProperty));
             var setter = pi.DelegateForSetProperty();
+
+            
 
             var inst = new AClass();
 

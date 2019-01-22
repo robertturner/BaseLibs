@@ -45,5 +45,25 @@ namespace BaseLibs.Types
             var expr = Expression.Lambda(typeof(MemberSetter), body, instParam, valueParam);
             return (MemberSetter)expr.Compile();
         }
+
+        public static Expression ExpressionForSetProperty(this PropertyInfo p)
+        {
+            var parentType = p.DeclaringType;
+            var type = p.PropertyType;
+            var m = p.SetMethod;
+
+            var instParam = Expression.Parameter(typeof(object), "instance");
+            var valueParam = Expression.Parameter(typeof(object), "value");
+            var callInstParam = m.IsStatic ? null :
+                ((parentType == typeof(object)) ? (Expression)instParam :
+                (parentType.IsValueType ? Expression.Unbox(instParam, parentType) : Expression.Convert(instParam, parentType)));
+
+            var argExpr = (type == typeof(object)) ? (Expression)valueParam : Expression.Convert(valueParam, type);
+
+            var body = Expression.Block(Expression.Call(callInstParam, m, argExpr), instParam);
+
+            var expr = Expression.Lambda(typeof(MemberSetter), body, instParam, valueParam);
+            return expr;
+        }
     }
 }

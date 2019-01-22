@@ -11,17 +11,17 @@ namespace BaseLibs.Tasks
     [System.Diagnostics.DebuggerDisplay("Status = {Instance.Status}, Result = {ResultAsString}")]
     public sealed class TaskGeneric
     {
-        static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache> genTaskDelCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, TaskGenDelCache>();
+        static readonly Dictionary<Type, TaskGenDelCache> genTaskDelCache = new Dictionary<Type, TaskGenDelCache>();
+        static readonly object taskDelLock = new object();
 
         public TaskGeneric(Task task)
         {
-            if (task == null)
-                throw new ArgumentNullException(nameof(task));
+            task.ThrowIfNull(nameof(task));
             var genTask = task.GetType();
             for (;;)
             {
                 if (genTask == typeof(Task))
-                    throw new ArgumentException("task does not have Result");
+                    ExThrowers.ThrowArgEx("task does not have Result");
                 if (genTask.IsGenericType)
                 {
                     var t = genTask.GetGenericTypeDefinition();
@@ -32,7 +32,8 @@ namespace BaseLibs.Tasks
             }
             Instance = task;
             ResultType = genTask.GetGenericArguments()[0];
-            cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
+            lock (taskDelLock)
+                cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
         }
 
         public Task Instance { get; }

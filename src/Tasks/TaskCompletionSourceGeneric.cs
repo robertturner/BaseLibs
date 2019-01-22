@@ -10,7 +10,8 @@ namespace BaseLibs.Tasks
 {
     public sealed class TaskCompletionSourceGeneric
     {
-        static readonly System.Collections.Concurrent.ConcurrentDictionary<Type, TaskDelegateCacheContainer> tdcCache = new System.Collections.Concurrent.ConcurrentDictionary<Type, TaskDelegateCacheContainer>();
+        static readonly object tdcCacheLock = new object();
+        static readonly Dictionary<Type, TaskDelegateCacheContainer> tdcCache = new Dictionary<Type, TaskDelegateCacheContainer>();
 
         private readonly TaskDelegateCacheContainer cont;
         public Type Type => cont.Type;
@@ -20,18 +21,19 @@ namespace BaseLibs.Tasks
 
         public TaskCompletionSourceGeneric(Type type)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type));
-            cont = tdcCache.GetOrSet(type, t => new TaskDelegateCacheContainer(t));
-            Instance = cont.CreateTcs();
+            type.ThrowIfNull(nameof(type));
+            lock (tdcCacheLock)
+            {
+                cont = tdcCache.GetOrSet(type, t => new TaskDelegateCacheContainer(t));
+            }
+            Instance = cont.Creator();
         }
 
         public void SetResult(object result) { cont.SetResCaller(Instance, result); }
 
         public void SetException(Exception exception)
         {
-            if (exception == null)
-                throw new ArgumentNullException(nameof(exception));
+            exception.ThrowIfNull(nameof(exception));
             cont.SetExceptionCaller(Instance, exception);
         }
 
@@ -46,12 +48,13 @@ namespace BaseLibs.Tasks
             public MemberGetter GetTaskCaller { get; }
             public Action<object, Exception> SetExceptionCaller { get; }
 
-            public object CreateTcs() => Activator.CreateInstance(TCSType);
+            public Func<object> Creator { get; }
 
             public TaskDelegateCacheContainer(Type type)
             {
                 Type = type;
                 TCSType = typeof(TaskCompletionSource<>).MakeGenericType(type);
+                Creator = TCSType.GetConstructor(new Type[0]).DelegateForConstructorNoArgs();
                 SetResCaller = TCSType.GetMethod("SetResult", new[] { type }).CreateCustomDelegate<Action<object, object>>();
                 GetTaskCaller = TCSType.GetProperty("Task").DelegateForGetProperty();
                 SetExceptionCaller = TCSType.GetMethod("SetException", new[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>();
