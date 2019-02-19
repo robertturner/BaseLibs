@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -35,6 +36,12 @@ namespace ConsoleAppTests
 
             var inst = new AClass();
 
+            
+            //var t = new MethodCallExpression()
+            
+
         }
+
+        
     }
 }

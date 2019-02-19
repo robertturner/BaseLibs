@@ -12,22 +12,22 @@ namespace BaseLibs.Tasks
         TaskCompletionSource<T> val_;
         readonly object creator_;
 
-        public LazyTask(Action<Action<T>> creator)
-        {
-            creator.ThrowIfNull(nameof(creator));
-            creator_ = creator;
-        }
-        public LazyTask(Action<Action<T>, LazyTask<T>> creator)
-        {
-            creator.ThrowIfNull(nameof(creator));
-            creator_ = creator;
-        }
         public LazyTask(Func<Action<T>, Task> creator)
         {
             creator.ThrowIfNull(nameof(creator));
             creator_ = creator;
         }
         public LazyTask(Func<Action<T>, LazyTask<T>, Task> creator)
+        {
+            creator.ThrowIfNull(nameof(creator));
+            creator_ = creator;
+        }
+        public LazyTask(Action<Action<T>> creator)
+        {
+            creator.ThrowIfNull(nameof(creator));
+            creator_ = creator;
+        }
+        public LazyTask(Action<Action<T>, LazyTask<T>> creator)
         {
             creator.ThrowIfNull(nameof(creator));
             creator_ = creator;
@@ -42,29 +42,28 @@ namespace BaseLibs.Tasks
                 {
                     try
                     {
-                        if (creator_ is Func<Action<T>, Task> tc1)
+                        switch (creator_)
                         {
-                            tc1(val_.SetResult).ContinueWith(r =>
-                            {
-                                if (r.IsFaulted)
-                                    val_.TrySetException(r.Exception);
-                            });
-                        }
-                        else if (creator_ is Func<Action<T>, LazyTask<T>, Task> tc2)
-                        {
-                            tc2(val_.SetResult, this).ContinueWith(r =>
-                            {
-                                if (r.IsFaulted)
-                                    val_.TrySetException(r.Exception);
-                            });
-                        }
-                        else if (creator_ is Action<Action<T>> c1)
-                        {
-                            c1(val_.SetResult);
-                        }
-                        else if (creator_ is Action<Action<T>, LazyTask<T>> c2)
-                        {
-                            c2(val_.SetResult, this);
+                            case Func<Action<T>, Task> tc:
+                                tc(val_.SetResult).ContinueWith(r =>
+                                {
+                                    if (r.IsFaulted)
+                                        val_.TrySetException(r.Exception);
+                                });
+                                break;
+                            case Func<Action<T>, LazyTask<T>, Task> tc:
+                                tc(val_.SetResult, this).ContinueWith(r =>
+                                {
+                                    if (r.IsFaulted)
+                                        val_.TrySetException(r.Exception);
+                                });
+                                break;
+                            case Action<Action<T>> tc:
+                                tc(val_.SetResult);
+                                break;
+                            case Action<Action<T>, LazyTask<T>> tc:
+                                tc(val_.SetResult, this);
+                                break;
                         }
                     }
                     catch (Exception ex)

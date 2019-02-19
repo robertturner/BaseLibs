@@ -10,7 +10,6 @@ namespace BaseLibs.Tasks
 {
     public sealed class TaskCompletionSourceGeneric
     {
-        static readonly object tdcCacheLock = new object();
         static readonly Dictionary<Type, TaskDelegateCacheContainer> tdcCache = new Dictionary<Type, TaskDelegateCacheContainer>();
 
         private readonly TaskDelegateCacheContainer cont;
@@ -22,10 +21,8 @@ namespace BaseLibs.Tasks
         public TaskCompletionSourceGeneric(Type type)
         {
             type.ThrowIfNull(nameof(type));
-            lock (tdcCacheLock)
-            {
+            lock (tdcCache)
                 cont = tdcCache.GetOrSet(type, t => new TaskDelegateCacheContainer(t));
-            }
             Instance = cont.Creator();
         }
 

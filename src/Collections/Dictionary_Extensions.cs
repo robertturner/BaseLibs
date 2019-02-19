@@ -62,6 +62,15 @@ namespace BaseLibs.Collections
             return value;
         }
 
+        public static TValue GetOrSet<TKey, TValue>(this System.Collections.Concurrent.ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueGetter)
+        {
+            return dictionary.GetOrAdd(key, _ => valueGetter());
+        }
+        public static TValue GetOrSet<TKey, TValue>(this System.Collections.Concurrent.ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TValue> valueGetter)
+        {
+            return dictionary.GetOrAdd(key, valueGetter);
+        }
+
         public static TValue GetOrThrow<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> dictionary, TKey key, Func<Exception> exceptionCreator)
         {
             dictionary.ThrowIfNull(nameof(dictionary));

@@ -42,5 +42,13 @@ namespace BaseLibs.Test.Enums
             Assert.Equal("Bob is a guy", bobDesc);
             Assert.Equal("Jim", Enum_NoVals1.Jim.GetDescription());
         }
+
+        [Fact]
+        public void Enum_EnumFromDesc()
+        {
+            var bobDesc = Enum_Extensions.TryParseFromDescription<Enum_NoVals1>("Bob is a guy");
+            Assert.Equal(Enum_NoVals1.Bob, bobDesc);
+            Assert.Equal(Enum_NoVals1.Jim, Enum_Extensions.TryParseFromDescription<Enum_NoVals1>("Jim"));
+        }
     }
 }

@@ -8,6 +8,13 @@ namespace BaseLibs.Test.Collections
 {
     public class Dictionaries
     {
+        [Fact]
+        public void ConcurrentDict_GetOrSet()
+        {
+            var dict = new System.Collections.Concurrent.ConcurrentDictionary<int, string>();
+            dict.GetOrSet(3, () => "bob");
+            Assert.Equal("bob", dict.GetValueOrDefault(3));
+        }
 
 
         [Fact]

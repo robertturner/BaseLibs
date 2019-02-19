@@ -18,5 +18,18 @@ namespace BaseLibs.Test.Tuples
             Assert.Equal(typeof((string, string, string)), vtT);
         }
 
+        void DummyMethod((int Bob, string Jim) vtArg) { }
+
+        [Fact]
+        public void ValuesTupleTypes_ParamNames()
+        {
+            var mi = typeof(ValueTupleTypes).GetMethod(nameof(DummyMethod), System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var pi = mi.GetParameters()[0];
+            Assert.True(pi.TryGetValueTupleTypes(out Type[] argTypes, out string[] argNames));
+
+            Assert.Equal(new[] { typeof(int), typeof(string) }, argTypes);
+            Assert.Equal(new[] { "Bob", "Jim" }, argNames);
+        }
+
     }
 }

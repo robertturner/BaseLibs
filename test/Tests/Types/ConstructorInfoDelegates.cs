@@ -53,6 +53,41 @@ namespace BaseLibs.Test.Types
             Assert.Equal("bob", (string)obj);
         }
 
+        class BaseNoArgs
+        {
+            public int Val { get; }
+        }
+        class DerivedNoArgs : BaseNoArgs
+        {
+        }
+
+        [Fact]
+        public void Ctor_DerivedClassNoArgs()
+        {
+            var c = typeof(DerivedNoArgs).GetConstructor(new Type[0]);
+            var constructorDel = c.DelegateForConstructorNoArgs<BaseNoArgs>();
+            var obj = constructorDel.Invoke();
+        }
+
+        class BaseOneArg
+        {
+            public BaseOneArg(int val) { this.Val = val; }
+            public int Val { get; }
+        }
+        class DerivedOneArg : BaseOneArg
+        {
+            public DerivedOneArg(int val) : base(val) { }
+        }
+
+        [Fact]
+        public void Ctor_BaseClassOneArg()
+        {
+            var c = typeof(DerivedOneArg).GetConstructor(new[] { typeof(int) });
+            var constructorDel = c.DelegateForConstructor<BaseOneArg>();
+            var obj = constructorDel.Invoke(5);
+            Assert.Equal(5, obj.Val);
+        }
+
         [Fact]
         public void Ctor_DictionaryNoArgs()
         {

@@ -12,7 +12,6 @@ namespace BaseLibs.Tasks
     public sealed class TaskGeneric
     {
         static readonly Dictionary<Type, TaskGenDelCache> genTaskDelCache = new Dictionary<Type, TaskGenDelCache>();
-        static readonly object taskDelLock = new object();
 
         public TaskGeneric(Task task)
         {
@@ -32,7 +31,7 @@ namespace BaseLibs.Tasks
             }
             Instance = task;
             ResultType = genTask.GetGenericArguments()[0];
-            lock (taskDelLock)
+            lock (genTaskDelCache)
                 cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
         }
 

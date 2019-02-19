@@ -16,12 +16,14 @@ namespace BaseLibs.Tasks
             return ex;
         }
 
-        public static Task<TReturn> Invoke<TReturn>(this SynchronizationContext sync, Func<TReturn> fnc, bool async = true)
+        public static async Task<TReturn> Invoke<TReturn>(this SynchronizationContext sync, Func<TReturn> fnc, bool async = true)
         {
             if (sync == null)
                 ExThrowers.ThrowArgNull(nameof(sync));
             if (fnc == null)
                 ExThrowers.ThrowArgNull(nameof(fnc));
+            if (sync == SynchronizationContext.Current)
+                return fnc();
             var tcs = new TaskCompletionSource<TReturn>();
             void ExecuteFnc()
             {
@@ -38,15 +40,20 @@ namespace BaseLibs.Tasks
                 sync.Post(_ => ExecuteFnc(), null);
             else
                 sync.Send(_ => ExecuteFnc(), null);
-            return tcs.Task;
+            return await tcs.Task;
         }
 
-        public static Task Invoke(this SynchronizationContext sync, Action fnc, bool async = true)
+        public static async Task Invoke(this SynchronizationContext sync, Action fnc, bool async = true)
         {
             if (sync == null)
                 ExThrowers.ThrowArgNull(nameof(sync));
             if (fnc == null)
                 ExThrowers.ThrowArgNull(nameof(fnc));
+            if (sync == SynchronizationContext.Current)
+            {
+                fnc();
+                return;
+            }
             var tcs = new TaskCompletionSource<bool>();
             void ExecuteFnc()
             {
@@ -64,7 +71,7 @@ namespace BaseLibs.Tasks
                 sync.Post(_ => ExecuteFnc(), null);
             else
                 sync.Send(_ => ExecuteFnc(), null);
-            return tcs.Task;
+            await tcs.Task;
         }
     }
 }

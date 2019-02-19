@@ -1,6 +1,7 @@
 ﻿using BaseLibs.Collections;
 using BaseLibs.Types;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,9 +13,8 @@ namespace BaseLibs.Tuples
 {
     public static class Type_Extensions
     {
-        static readonly object creatorsLock = new object();
         static readonly MethodInfo[] creatorsConstructorCache = typeof(ValueTuple).GetMethods().Where(m => m.IsStatic && m.Name == nameof(ValueTuple.Create)).ToArray();
-        static readonly Dictionary<Type[], ConstructorInvoker> creators = new Dictionary<Type[], ConstructorInvoker>();
+        static readonly ConcurrentDictionary<Type[], ConstructorInvoker> creators = new ConcurrentDictionary<Type[], ConstructorInvoker>();
 
         public static ConstructorInvoker AsValueTupleCreator(this Type[] types)
         {
@@ -22,14 +22,11 @@ namespace BaseLibs.Tuples
             if (types.Length >= creatorsConstructorCache.Length)
                 ExThrowers.ThrowArgEx($"Unable to create ValueTuple type with more than {creatorsConstructorCache.Length} args");
 
-            lock (creatorsLock)
+            return creators.GetOrAdd(types, t =>
             {
-                return creators.GetOrSet(types, () =>
-                {
-                    var invoker = creatorsConstructorCache[types.Length].MakeGenericMethod(types).DelegateForMethod();
-                    return objs => invoker(null, objs);
-                });
-            }
+                var invoker = creatorsConstructorCache[t.Length].MakeGenericMethod(t).DelegateForMethod();
+                return objs => invoker(null, objs);
+            });
         }
 
         static readonly Type[] valueTupleTypes = new[] {
@@ -50,6 +47,17 @@ namespace BaseLibs.Tuples
             if (types.Length > creatorsConstructorCache.Length)
                 ExThrowers.ThrowArgEx($"Unable to create ValueTuple type with more than {valueTupleTypes.Length} args");
             return valueTupleTypes[types.Length - 1].MakeGenericType(types);
+        }
+
+        public static bool TryGetValueTupleTypes(this Type type, out Type[] types)
+        {
+            if (type == null)
+                ExThrowers.ThrowArgNull(nameof(type));
+            types = null;
+            if (!type.FullName.StartsWith("System.ValueTuple`", StringComparison.Ordinal))
+                return false;
+            types = type.GetGenericArguments();
+            return true;
         }
 
         static readonly object getterLock = new object();
