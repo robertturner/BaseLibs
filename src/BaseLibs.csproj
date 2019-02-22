@@ -13,11 +13,11 @@
     <PackageReleaseNotes></PackageReleaseNotes>
     <Copyright>Copyright 2018</Copyright>
     <PackageTags>Utils</PackageTags>
-    <Version>0.1.18</Version>
+    <Version>0.1.20</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <AssemblyVersion>0.1.18.0</AssemblyVersion>
+    <AssemblyVersion>0.1.20.0</AssemblyVersion>
     <LangVersion>latest</LangVersion>
-    <FileVersion>0.1.18.0</FileVersion>
+    <FileVersion>0.1.20.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net47|AnyCPU'">

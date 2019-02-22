@@ -14,6 +14,30 @@ namespace BaseLibs.Tasks
             return new TaskGeneric(task);
         }
 
+        public static Task CastResultAs<T>(this Task<T> task, Type resultTypeToCastTo)
+        {
+            var tcs = new TaskCompletionSourceGeneric(resultTypeToCastTo);
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    tcs.SetException(t.Exception);
+                else if (t.IsCanceled)
+                    tcs.SetCancelled();
+                else
+                {
+                    try
+                    {
+                        tcs.SetResult(t.Result);
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }
+            }, TaskContinuationOptions.ExecuteSynchronously);
+            return tcs.Task;
+        }
+
         public static Task<T[]> WhenAll<T>(this IEnumerable<Task<T>> source) => Task.WhenAll(source);
 
         public static async Task<T> TimeoutAfter<T>(this Task<T> task, TimeSpan timeout)
