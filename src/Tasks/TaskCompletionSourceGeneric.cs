@@ -34,7 +34,7 @@ namespace BaseLibs.Tasks
             cont.SetExceptionCaller(Instance, exception);
         }
 
-        public void SetCancelled()
+        public void SetCanceled()
         {
             cont.SetCanceledCaller(Instance);
         }

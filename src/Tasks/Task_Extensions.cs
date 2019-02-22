@@ -14,6 +14,31 @@ namespace BaseLibs.Tasks
             return new TaskGeneric(task);
         }
 
+        public static Task CastResultAs(this Task task, Type resultTypeToCastTo)
+        {
+            var genTask = task.TryGetAsGenericTask();
+            var tcs = new TaskCompletionSourceGeneric(resultTypeToCastTo);
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    tcs.SetException(t.Exception);
+                else if (t.IsCanceled)
+                    tcs.SetCanceled();
+                else
+                {
+                    try
+                    {
+                        tcs.SetResult(genTask.Result);
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }
+            }, TaskContinuationOptions.ExecuteSynchronously);
+            return tcs.Task;
+        }
+
         public static Task CastResultAs<T>(this Task<T> task, Type resultTypeToCastTo)
         {
             var tcs = new TaskCompletionSourceGeneric(resultTypeToCastTo);
@@ -22,7 +47,7 @@ namespace BaseLibs.Tasks
                 if (t.IsFaulted)
                     tcs.SetException(t.Exception);
                 else if (t.IsCanceled)
-                    tcs.SetCancelled();
+                    tcs.SetCanceled();
                 else
                 {
                     try
@@ -30,6 +55,57 @@ namespace BaseLibs.Tasks
                         tcs.SetResult(t.Result);
                     }
                     catch (InvalidCastException ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }
+            }, TaskContinuationOptions.ExecuteSynchronously);
+            return tcs.Task;
+        }
+
+        public static Task<T> CastResultAs<T>(this Task task)
+        {
+            var tcs = new TaskCompletionSource<T>();
+            var genTask = task.TryGetAsGenericTask();
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    tcs.SetException(t.Exception);
+                else if (t.IsCanceled)
+                    tcs.SetCanceled();
+                else
+                {
+                    try
+                    {
+                        tcs.SetResult((T)genTask.Result);
+                    }
+                    catch (InvalidCastException ex)
+                    {
+                        tcs.SetException(ex);
+                    }
+                }
+            }, TaskContinuationOptions.ExecuteSynchronously);
+            return tcs.Task;
+        }
+
+        public static Task<TRes> Transform<TArg, TRes>(this Task<TArg> task, Func<TArg, TRes> transformer)
+        {
+            if (transformer == null)
+                ExThrowers.ThrowArgNull(nameof(transformer));
+            var tcs = new TaskCompletionSource<TRes>();
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    tcs.SetException(t.Exception);
+                else if (t.IsCanceled)
+                    tcs.SetCanceled();
+                else
+                {
+                    try
+                    {
+                        tcs.SetResult(transformer(t.Result));
+                    }
+                    catch (Exception ex)
                     {
                         tcs.SetException(ex);
                     }

@@ -94,5 +94,31 @@ namespace BaseLibs.Test.Tasks
             Assert.Equal(5, ((Task<int>)intTask).Result);
         }
 
+        [Fact]
+        public void CastAsT_string()
+        {
+            var tcs = new TaskCompletionSource<object>();
+            Task tcsTask = tcs.Task;
+            var strTask = tcsTask.CastResultAs(typeof(string));
+            Assert.NotNull(strTask);
+            Assert.IsType<Task<string>>(strTask);
+            tcs.SetResult("bob");
+            Assert.Equal("bob", ((Task<string>)strTask).Result);
+        }
+
+        [Fact]
+        public void CastAsT_ValueType()
+        {
+            var tcs = new TaskCompletionSource<object>();
+            Task tcsTask = tcs.Task;
+            var intTask = tcsTask.CastResultAs(typeof(int));
+            Assert.NotNull(intTask);
+            Assert.IsType<Task<int>>(intTask);
+            tcs.SetResult(5);
+            Assert.True(intTask.IsCompleted);
+            Assert.Equal(5, ((Task<int>)intTask).Result);
+        }
+
+
     }
 }
