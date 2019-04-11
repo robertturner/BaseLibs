@@ -22,6 +22,21 @@ namespace BaseLibs.Test.Tasks
             Assert.Equal(res, task.Result);
         }
 
+        [Fact]
+        public void AsnycState_SetResult_String()
+        {
+            object someState = "SomeState";
+
+            var res = "bob";
+            var tcs = typeof(string).AsTCSGeneric(someState);
+            tcs.SetResult(res);
+
+            Assert.NotNull(tcs.Task);
+            var task = tcs.Task as Task<string>;
+            Assert.NotNull(task);
+            Assert.Equal(res, task.Result);
+            Assert.Equal(someState, task.AsyncState);
+        }
 
 
         [Fact]

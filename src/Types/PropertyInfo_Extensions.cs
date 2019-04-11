@@ -21,9 +21,27 @@ namespace BaseLibs.Types
                 ((parentType == typeof(object)) ? (Expression)instParam : Expression.Convert(instParam, parentType));
 
             var call = Expression.Call(callInstParam, m);
-            var body = (type == typeof(object)) ? (Expression)call : Expression.Convert(call, typeof(object));
+            var body = type.IsValueType ? (Expression)Expression.Convert(call, typeof(object)) : call;
             var expr = Expression.Lambda(typeof(MemberGetter), body, instParam);
             return (MemberGetter)expr.Compile();
+        }
+        public static MemberGetter<T> DelegateForGetProperty<T>(this PropertyInfo p)
+        {
+            var parentType = p.DeclaringType;
+            var m = p.GetMethod;
+            var type = p.PropertyType;
+            var genType = typeof(T);
+            if (!genType.IsAssignableFrom(type))
+                ExThrowers.ThrowArgEx($"Generic argument ({genType}) cannot be assigned from property type ({type})");
+
+            var instParam = Expression.Parameter(typeof(object), "instance");
+            var callInstParam = m.IsStatic ? null :
+                ((parentType == typeof(object)) ? (Expression)instParam : Expression.Convert(instParam, parentType));
+
+            var call = Expression.Call(callInstParam, m);
+            var body = type.IsValueType ? (Expression)Expression.Convert(call, genType) : call;
+            var expr = Expression.Lambda(typeof(MemberGetter<T>), body, instParam);
+            return (MemberGetter<T>)expr.Compile();
         }
 
         public static MemberSetter DelegateForSetProperty(this PropertyInfo p)

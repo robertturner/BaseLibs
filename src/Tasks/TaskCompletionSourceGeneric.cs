@@ -23,23 +23,33 @@ namespace BaseLibs.Tasks
         {
             type.ThrowIfNull(nameof(type));
             cont = tdcCache.GetOrAdd(type, t => new TaskDelegateCacheContainer(t));
-            Instance = cont.Creator();
+            Instance = cont.Creator.Value();
+        }
+        public TaskCompletionSourceGeneric(Type type, object state)
+        {
+            type.ThrowIfNull(nameof(type));
+            cont = tdcCache.GetOrAdd(type, t => new TaskDelegateCacheContainer(t));
+            Instance = cont.CreatorState.Value(state);
         }
 
         public void SetResult(object result) { cont.SetResCaller(Instance, result); }
+        public void TrySetResult(object result) { cont.TrySetResCaller.Value(Instance, result); }
 
         public void SetException(Exception exception)
         {
             exception.ThrowIfNull(nameof(exception));
-            cont.SetExceptionCaller(Instance, exception);
+            cont.SetExceptionCaller.Value(Instance, exception);
         }
-
-        public void SetCanceled()
+        public void TrySetException(Exception exception)
         {
-            cont.SetCanceledCaller(Instance);
+            exception.ThrowIfNull(nameof(exception));
+            cont.TrySetExceptionCaller.Value(Instance, exception);
         }
 
-        public Task Task => (Task)cont.GetTaskCaller(Instance);
+        public void SetCanceled() => cont.SetCanceledCaller.Value(Instance);
+        public void TrySetCanceled() => cont.TrySetCanceledCaller.Value(Instance);
+
+        public Task Task => cont.GetTaskCaller(Instance);
 
         private class TaskDelegateCacheContainer
         {
@@ -47,21 +57,29 @@ namespace BaseLibs.Tasks
             public Type Type { get; }
 
             public Action<object, object> SetResCaller { get; }
-            public MemberGetter GetTaskCaller { get; }
-            public Action<object, Exception> SetExceptionCaller { get; }
-            public Action<object> SetCanceledCaller { get; }
+            public Lazy<Action<object, object>> TrySetResCaller { get; }
+            public MemberGetter<Task> GetTaskCaller { get; }
+            public Lazy<Action<object, Exception>> SetExceptionCaller { get; }
+            public Lazy<Action<object, Exception>> TrySetExceptionCaller { get; }
+            public Lazy<Action<object>> SetCanceledCaller { get; }
+            public Lazy<Action<object>> TrySetCanceledCaller { get; }
 
-            public Func<object> Creator { get; }
+            public Lazy<Func<object>> Creator { get; }
+            public Lazy<ConstructorInvoker> CreatorState { get; }
 
             public TaskDelegateCacheContainer(Type type)
             {
                 Type = type;
                 TCSType = typeof(TaskCompletionSource<>).MakeGenericType(type);
-                Creator = TCSType.GetConstructor(new Type[0]).DelegateForConstructorNoArgs();
+                Creator = new Lazy<Func<object>>(() => TCSType.GetConstructor(new Type[0]).DelegateForConstructorNoArgs(), true);
+                CreatorState = new Lazy<ConstructorInvoker>(() => TCSType.GetConstructor(new Type[] { typeof(object) }).DelegateForConstructor(), true);
                 SetResCaller = TCSType.GetMethod(nameof(TaskCompletionSource<object>.SetResult), new[] { type }).CreateCustomDelegate<Action<object, object>>();
-                GetTaskCaller = TCSType.GetProperty(nameof(TaskCompletionSource<object>.Task)).DelegateForGetProperty();
-                SetExceptionCaller = TCSType.GetMethod(nameof(TaskCompletionSource<object>.SetException), new[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>();
-                SetCanceledCaller = TCSType.GetMethod(nameof(TaskCompletionSource<object>.SetCanceled)).CreateCustomDelegate<Action<object>>();
+                TrySetResCaller = new Lazy<Action<object, object>>(() => TCSType.GetMethod(nameof(TaskCompletionSource<object>.TrySetResult), new[] { type }).CreateCustomDelegate<Action<object, object>>(), true);
+                GetTaskCaller = TCSType.GetProperty(nameof(TaskCompletionSource<object>.Task)).DelegateForGetProperty<Task>();
+                SetExceptionCaller = new Lazy<Action<object, Exception>>(() => TCSType.GetMethod(nameof(TaskCompletionSource<object>.SetException), new[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>(), true);
+                TrySetExceptionCaller = new Lazy<Action<object, Exception>>(() => TCSType.GetMethod(nameof(TaskCompletionSource<object>.TrySetException), new[] { typeof(Exception) }).CreateCustomDelegate<Action<object, Exception>>(), true);
+                SetCanceledCaller = new Lazy<Action<object>>(() => TCSType.GetMethod(nameof(TaskCompletionSource<object>.SetCanceled)).CreateCustomDelegate<Action<object>>(), true);
+                TrySetCanceledCaller = new Lazy<Action<object>>(() => TCSType.GetMethod(nameof(TaskCompletionSource<object>.TrySetCanceled)).CreateCustomDelegate<Action<object>>(), true);
             }
         }
     }

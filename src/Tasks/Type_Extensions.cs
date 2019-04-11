@@ -12,5 +12,9 @@ namespace BaseLibs.Tasks
         {
             return new TaskCompletionSourceGeneric(type);
         }
+        public static TaskCompletionSourceGeneric AsTCSGeneric(this Type type, object state)
+        {
+            return new TaskCompletionSourceGeneric(type, state);
+        }
     }
 }

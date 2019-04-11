@@ -7,4 +7,5 @@ using System.Threading.Tasks;
 namespace BaseLibs.Types
 {
     public delegate object MemberGetter(object instance);
+    public delegate T MemberGetter<T>(object instance);
 }

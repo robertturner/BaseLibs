@@ -107,5 +107,91 @@ namespace BaseLibs.Test.Types
             inst = (AStruct)setter(inst, setVal);
             Assert.Equal(setVal, inst.AStructVal);
         }
+
+        [Fact]
+        public void GetProperty_ClassInstance_ClassProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AClassProperty));
+            var getter = pi.DelegateForGetProperty();
+
+            var inst = new AClass() { AClassProperty = "howdy" };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AClassProperty, inst2);
+        }
+
+        [Fact]
+        public void GetProperty_ClassInstance_ValueProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AValProperty));
+            var getter = pi.DelegateForGetProperty();
+
+            var inst = new AClass() { AValProperty = 66 };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AValProperty, inst2);
+        }
+
+        [Fact]
+        public void GetProperty_ClassInstance_StructProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AStructVal));
+            var getter = pi.DelegateForGetProperty();
+
+            var inst = new AClass() { AStructVal = new StructVal { IntVal = 5 } };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AStructVal, inst2);
+        }
+
+        [Fact]
+        public void GetPropertyT_ClassInstance_ClassProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AClassProperty));
+            var getter = pi.DelegateForGetProperty<object>();
+
+            var inst = new AClass() { AClassProperty = "howdy" };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AClassProperty, inst2);
+        }
+
+        [Fact]
+        public void GetPropertyT_ClassInstance_ValueProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AValProperty));
+            var getter = pi.DelegateForGetProperty();
+
+            var inst = new AClass() { AValProperty = 66 };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AValProperty, inst2);
+        }
+#if false
+        [Fact]
+        public void GetPropertyT_ClassInstance_ValueProperty_Convert()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AValProperty));
+            var getter = pi.DelegateForGetProperty<Int16>();
+
+            var inst = new AClass() { AValProperty = 66 };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AValProperty, (int)inst2);
+        }
+#endif
+
+        [Fact]
+        public void GetPropertyT_ClassInstance_StructProperty()
+        {
+            var pi = typeof(AClass).GetProperty(nameof(AClass.AStructVal));
+            var getter = pi.DelegateForGetProperty<StructVal>();
+
+            var inst = new AClass() { AStructVal = new StructVal { IntVal = 5 } };
+
+            var inst2 = getter(inst);
+            Assert.Equal(inst.AStructVal, inst2);
+        }
+
     }
 }
