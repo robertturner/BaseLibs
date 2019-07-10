@@ -10,7 +10,7 @@ namespace BaseLibs.Tasks
     {
         public static Task AsGenericTaskResult(this object result, Type type)
         {
-            var tcs = new TaskCompletionSourceGeneric(type);
+            var tcs = TaskCompletionSourceGeneric.Create(type);
             tcs.SetResult(result);
             return tcs.Task;
         }

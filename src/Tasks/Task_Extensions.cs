@@ -9,15 +9,12 @@ namespace BaseLibs.Tasks
 {
     public static class Task_Extensions
     {
-        public static TaskGeneric TryGetAsGenericTask(this Task task)
-        {
-            return new TaskGeneric(task);
-        }
+        public static TaskGeneric TryGetAsGenericTask(this Task task) => TaskGeneric.Create(task);
 
         public static Task CastResultAs(this Task task, Type resultTypeToCastTo)
         {
             var genTask = task.TryGetAsGenericTask();
-            var tcs = new TaskCompletionSourceGeneric(resultTypeToCastTo);
+            var tcs = TaskCompletionSourceGeneric.Create(resultTypeToCastTo);
             task.ContinueWith(t =>
             {
                 if (t.IsFaulted)
@@ -41,7 +38,7 @@ namespace BaseLibs.Tasks
 
         public static Task CastResultAs<T>(this Task<T> task, Type resultTypeToCastTo)
         {
-            var tcs = new TaskCompletionSourceGeneric(resultTypeToCastTo);
+            var tcs = TaskCompletionSourceGeneric.Create(resultTypeToCastTo);
             task.ContinueWith(t =>
             {
                 if (t.IsFaulted)

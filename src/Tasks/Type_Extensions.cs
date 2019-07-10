@@ -8,13 +8,8 @@ namespace BaseLibs.Tasks
 {
     public static class Type_Extensions
     {
-        public static TaskCompletionSourceGeneric AsTCSGeneric(this Type type)
-        {
-            return new TaskCompletionSourceGeneric(type);
-        }
-        public static TaskCompletionSourceGeneric AsTCSGeneric(this Type type, object state)
-        {
-            return new TaskCompletionSourceGeneric(type, state);
-        }
+        public static TaskCompletionSourceGeneric AsTCSGeneric(this Type type) => TaskCompletionSourceGeneric.Create(type);
+
+        public static TaskCompletionSourceGeneric AsTCSGeneric(this Type type, object state) => TaskCompletionSourceGeneric.Create(type, state);
     }
 }

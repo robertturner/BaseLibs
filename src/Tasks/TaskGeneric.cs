@@ -1,6 +1,7 @@
 ﻿using BaseLibs.Collections;
 using BaseLibs.Types;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,15 +10,21 @@ using System.Threading.Tasks;
 namespace BaseLibs.Tasks
 {
     [System.Diagnostics.DebuggerDisplay("Status = {Instance.Status}, Result = {ResultAsString}")]
-    public sealed class TaskGeneric
+    public abstract class TaskGeneric
     {
-        static readonly Dictionary<Type, TaskGenDelCache> genTaskDelCache = new Dictionary<Type, TaskGenDelCache>();
+        static readonly ConcurrentDictionary<Type, ConstructorInvoker> ctorCache = new ConcurrentDictionary<Type, ConstructorInvoker>();
 
-        public TaskGeneric(Task task)
+        public static TaskGeneric Create(Task task)
         {
-            task.ThrowIfNull(nameof(task));
+            var type = TaskType(task);
+            var ctor = ctorCache.GetOrAdd(type, t => typeof(TaskGen<>).MakeGenericType(t).GetConstructor(new Type[] { typeof(Task) }).DelegateForConstructor());
+            return (TaskGeneric)ctor(task);
+        }
+
+        static Type TaskType(Task task)
+        {
             var genTask = task.GetType();
-            for (;;)
+            for (; ; )
             {
                 if (genTask == typeof(Task))
                     ExThrowers.ThrowArgEx("task does not have Result");
@@ -29,34 +36,30 @@ namespace BaseLibs.Tasks
                 }
                 genTask = genTask.BaseType;
             }
-            Instance = task;
-            ResultType = genTask.GetGenericArguments()[0];
-            lock (genTaskDelCache)
-                cache = genTaskDelCache.GetOrSet(ResultType, () => new TaskGenDelCache(genTask));
+            return genTask.GetGenericArguments()[0];
         }
 
-        public Task Instance { get; }
+        private TaskGeneric() { }
 
-        readonly TaskGenDelCache cache;
+        public abstract Task Instance { get; }
 
-        public Type GenTaskType => cache.GenTaskType;
-        public Type ResultType { get; }
+        public abstract Type ResultType { get; }
 
-        class TaskGenDelCache
+        sealed class TaskGen<T> : TaskGeneric
         {
-            public TaskGenDelCache(Type genTaskType)
-            {
-                GenTaskType = genTaskType;
-                ResultCaller = GenTaskType.GetProperty("Result").DelegateForGetProperty();
-            }
-            public Type GenTaskType { get; }
+            public override Task Instance => instance;
+            public Task<T> instance;
 
-            public MemberGetter ResultCaller { get; }
+            public override Type ResultType => typeof(T);
+
+            public override object Result => instance.Result;
+
+            public TaskGen(Task instance) => this.instance = (Task<T>)instance;
         }
 
-        string ResultAsString => (Instance.Status == TaskStatus.RanToCompletion) ? Result.ToString() : "<value not available>";
+        string ResultAsString => (Instance.Status == TaskStatus.RanToCompletion) ? Result.ToString() : "<value not computed yet>";
 
         [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
-        public object Result => cache.ResultCaller(Instance);
+        public abstract object Result { get; }
     }
 }

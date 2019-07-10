@@ -10,7 +10,7 @@ namespace BaseLibs.Tasks
     {
         public static Task AsGenericTaskException(this Exception exception, Type type)
         {
-            var tcs = new TaskCompletionSourceGeneric(type);
+            var tcs = TaskCompletionSourceGeneric.Create(type);
             tcs.SetException(exception);
             return tcs.Task;
         }
