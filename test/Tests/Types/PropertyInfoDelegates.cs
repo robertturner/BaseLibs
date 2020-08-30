@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Xunit;
 using BaseLibs.Types;
-
+using System.Reflection;
 
 namespace BaseLibs.Test.Types
 {
@@ -21,6 +21,18 @@ namespace BaseLibs.Test.Types
             public string AClassProperty { get; set; }
             public int AValProperty { get; set; }
             public StructVal AStructVal { get; set; }
+
+            public int this[int index] => index * 4;
+            public string this[string index] => index + "HI";
+            public static PropertyInfo GetIndexer(Type indexerType)
+            {
+                foreach (var p in typeof(AClass).GetProperties())
+                {
+                    if (p.GetIndexParameters().Length > 0 && p.GetIndexParameters()[0].ParameterType == indexerType)
+                        return p;
+                }
+                return null;
+            }
         }
 
         struct AStruct
@@ -191,6 +203,58 @@ namespace BaseLibs.Test.Types
 
             var inst2 = getter(inst);
             Assert.Equal(inst.AStructVal, inst2);
+        }
+
+
+
+        [Fact]
+        public void GetPropertyIndex_ClassInstance_ValueIndexer()
+        {
+            var pi = AClass.GetIndexer(typeof(int));
+            var getter = pi.DelegateForGetPropertyIndex();
+
+            var inst = new AClass();
+
+            var inst2 = getter(inst, 4);
+            Assert.Equal(4*4, inst2);
+        }
+
+        [Fact]
+        public void GetPropertyIndex_ClassInstance_StringIndexer()
+        {
+            var pi = AClass.GetIndexer(typeof(string));
+            var getter = pi.DelegateForGetPropertyIndex();
+
+            var inst = new AClass();
+
+            var inst2 = getter(inst, "bob");
+            Assert.Equal("bobHI", inst2);
+        }
+
+        [Fact]
+        public void GetPropertyIndexT_ClassInstance_ValueIndexer()
+        {
+#if true
+            var pi = AClass.GetIndexer(typeof(int));
+            var getter = pi.DelegateForGetPropertyIndex<int>();
+
+            var inst = new AClass();
+
+            var inst2 = getter(inst, 4);
+            Assert.Equal(4*4, inst2);
+#endif
+        }
+
+        [Fact]
+        public void GetPropertyIndexT_ClassInstance_StringIndexer()
+        {
+            var pi = AClass.GetIndexer(typeof(string));
+            var getter = pi.DelegateForGetPropertyIndex<string>();
+
+            var inst = new AClass();
+
+            var inst2 = getter(inst, "bob");
+            Assert.Equal("bobHI", inst2);
         }
 
     }
