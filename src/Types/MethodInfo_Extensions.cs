@@ -89,6 +89,8 @@ namespace BaseLibs.Types
 
         public static T CreateCustomDelegate<T>(this MethodInfo m) where T : class
         {
+            if (m == null)
+                ExThrowers.ThrowArgNull(nameof(m));
             var delType = typeof(T);
             if (!typeof(Delegate).IsAssignableFrom(delType))
                 ExThrowers.ThrowArgEx("T is not Delegate type");
